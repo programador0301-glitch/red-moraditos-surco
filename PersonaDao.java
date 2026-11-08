@@ -39,7 +39,7 @@ public class PersonaDao {
           + "FROM persona p LEFT JOIN grupo g ON g.id=p.grupo_id "
           + "LEFT JOIN persona_curso pc ON pc.persona_id=p.id LEFT JOIN curso c ON c.id=pc.curso_id ");
         if (!cond.isEmpty()) sql.append("WHERE ").append(String.join(" AND ", cond)).append(" ");
-               sql.append("GROUP BY p.id, g.nombre, g.lider ORDER BY p.nombres_completos");
+        sql.append("GROUP BY p.id, g.nombre, g.lider ORDER BY p.nombres_completos");
 
         List<Persona> out = new ArrayList<>();
         try (PreparedStatement ps = con.prepareStatement(sql.toString())) {
@@ -81,7 +81,7 @@ public class PersonaDao {
           + "FROM persona p LEFT JOIN grupo g ON g.id=p.grupo_id "
           + "LEFT JOIN persona_curso pc ON pc.persona_id=p.id LEFT JOIN curso c ON c.id=pc.curso_id "
           + "WHERE p.eliminado=0 AND p.creado IS NOT NULL AND p.creado >= ? AND p.creado < ? "
-                    + "GROUP BY p.id, g.nombre, g.lider ORDER BY p.nombres_completos";
+          + "GROUP BY p.id, g.nombre, g.lider ORDER BY p.nombres_completos";
         List<Persona> out = new ArrayList<>();
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, rango[0]); ps.setString(2, rango[1]);
@@ -99,7 +99,7 @@ public class PersonaDao {
           + "COUNT(pc.curso_id) ncur, " + com.redsurco.web.Db.groupConcat("c.nombre", ", ") + " cursos "
           + "FROM persona p LEFT JOIN grupo g ON g.id=p.grupo_id "
           + "LEFT JOIN persona_curso pc ON pc.persona_id=p.id LEFT JOIN curso c ON c.id=pc.curso_id "
-                    + "WHERE p.eliminado=0 AND p.grupo_id=? GROUP BY p.id, g.nombre, g.lider ORDER BY p.nombres_completos";
+          + "WHERE p.eliminado=0 AND p.grupo_id=? GROUP BY p.id, g.nombre, g.lider ORDER BY p.nombres_completos";
         List<Persona> out = new ArrayList<>();
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, grupoId);
@@ -240,7 +240,7 @@ public class PersonaDao {
           + "COUNT(pc.curso_id) ncur, " + com.redsurco.web.Db.groupConcat("c.nombre", ", ") + " cursos "
           + "FROM persona p LEFT JOIN grupo g ON g.id=p.grupo_id "
           + "LEFT JOIN persona_curso pc ON pc.persona_id=p.id LEFT JOIN curso c ON c.id=pc.curso_id "
-                   + "WHERE p.eliminado=1 GROUP BY p.id, g.nombre, g.lider ORDER BY p.eliminado_en DESC";
+          + "WHERE p.eliminado=1 GROUP BY p.id, g.nombre, g.lider ORDER BY p.eliminado_en DESC";
         List<Persona> out = new ArrayList<>();
         try (Statement st = con.createStatement(); ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) {
@@ -263,7 +263,7 @@ public class PersonaDao {
           + "FROM persona p LEFT JOIN grupo g ON g.id=p.grupo_id "
           + "LEFT JOIN persona_curso pc ON pc.persona_id=p.id LEFT JOIN curso c ON c.id=pc.curso_id "
           + "WHERE p.eliminado=0 AND p.registrado_por=? "
-                   + "GROUP BY p.id, g.nombre, g.lider ORDER BY p.creado DESC, p.nombres_completos";
+          + "GROUP BY p.id, g.nombre, g.lider ORDER BY p.creado DESC, p.nombres_completos";
         List<Persona> out = new ArrayList<>();
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, usuario);
@@ -282,7 +282,7 @@ public class PersonaDao {
           + "FROM persona p LEFT JOIN grupo g ON g.id=p.grupo_id "
           + "LEFT JOIN persona_curso pc ON pc.persona_id=p.id LEFT JOIN curso c ON c.id=pc.curso_id "
           + "WHERE p.eliminado=0 AND EXISTS (SELECT 1 FROM persona_curso x WHERE x.persona_id=p.id AND x.curso_id=?) "
-                    + "GROUP BY p.id, g.nombre, g.lider ORDER BY p.nombres_completos";
+          + "GROUP BY p.id, g.nombre, g.lider ORDER BY p.nombres_completos";
         List<Persona> out = new ArrayList<>();
         try (PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, cursoId);
