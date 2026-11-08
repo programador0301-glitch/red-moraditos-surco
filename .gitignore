@@ -1,0 +1,18 @@
+# Compilado / build
+target/
+*.class
+
+# Base de datos local y respaldos (contienen DATOS PERSONALES: no subir)
+redsurco.db
+redsurco.db-wal
+redsurco.db-shm
+backups/
+*.db
+
+# Volcado de datos para Neon (DATOS PERSONALES: se carga aparte, no al repo)
+docs/datos-neon.sql
+*-neon.sql
+
+# Sistema
+.DS_Store
+*.log

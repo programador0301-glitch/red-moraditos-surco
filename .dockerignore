@@ -1,0 +1,7 @@
+target/
+backups/
+*.db
+*.db-wal
+*.db-shm
+.git/
+*.log
