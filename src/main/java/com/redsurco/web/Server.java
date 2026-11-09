@@ -1231,7 +1231,7 @@ public class Server {
                 }
                 return;
             }
-            }
+            
             if (path.equals("/usuarios/eliminar") && metodo.equals("POST")) {
                 int id = Integer.parseInt(val(leerForm(ex), "id"));
                 var u = Auth.buscar(con, id);
