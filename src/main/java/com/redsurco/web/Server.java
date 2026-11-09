@@ -1200,37 +1200,36 @@ public class Server {
         Map<String, String> q = query(ex);
         try (Connection con = Db.open()) {
             if (path.equals("/usuarios/guardar") && metodo.equals("POST")) {
-                StringBuilder dbg = new StringBuilder("<h1>Diagnostico crear usuario</h1><pre>");
+                Map<String, List<String>> f = leerForm(ex);
+                String idS = val(f, "id"), username = val(f, "username"), clave = val(f, "clave");
+                String rolForm = val(f, "rol");
+                String rol = com.redsurco.web.model.Usuario.ADMIN.equals(rolForm) ? com.redsurco.web.model.Usuario.ADMIN
+                        : com.redsurco.web.model.Usuario.REGISTRO.equals(rolForm) ? com.redsurco.web.model.Usuario.REGISTRO
+                        : com.redsurco.web.model.Usuario.USUARIO;
+                String grupo = com.redsurco.web.Txt.limpia(val(f, "grupo"));
+                boolean nuevo = idS.isBlank() || idS.equals("0");
                 try {
-                    Map<String, List<String>> f = leerForm(ex);
-                    String idS = val(f, "id"), username = val(f, "username"), clave = val(f, "clave");
-                    String rolForm = val(f, "rol");
-                    String rol = com.redsurco.web.model.Usuario.ADMIN.equals(rolForm) ? com.redsurco.web.model.Usuario.ADMIN
-                            : com.redsurco.web.model.Usuario.REGISTRO.equals(rolForm) ? com.redsurco.web.model.Usuario.REGISTRO
-                            : com.redsurco.web.model.Usuario.USUARIO;
-                    String grupo = com.redsurco.web.Txt.limpia(val(f, "grupo"));
-                    dbg.append("username=[").append(Html.esc(username)).append("]\n");
-                    dbg.append("claveLen=").append(clave.length()).append("\n");
-                    dbg.append("rol=[").append(rol).append("]\n");
-                    dbg.append("id=[").append(idS).append("]\n");
-                    if (idS.isBlank()) {
-                        if (username.isBlank() || clave.isBlank()) {
-                            dbg.append("RESULTADO: faltan usuario o clave -> no se crea\n");
-                        } else {
-                            Auth.crearUsuario(con, username, clave, rol, grupo);
-                            dbg.append("RESULTADO: USUARIO CREADO OK\n");
-                        }
+                    if (nuevo) {
+                        if (username.isBlank() || clave.isBlank()) { redirigir(ex, "/usuarios/form?err=1"); return; }
+                        Auth.crearUsuario(con, username, clave, rol, grupo);
                     } else {
                         int id = Integer.parseInt(idS);
+                        if (username.isBlank()) { redirigir(ex, "/usuarios/form?err=1&id=" + id); return; }
+                        var actual = Auth.buscar(con, id);
+                        // no dejar sin administradores
+                        if (actual != null && actual.esAdmin() && !rol.equals(com.redsurco.web.model.Usuario.ADMIN)
+                                && Auth.contarAdmins(con) <= 1) { redirigir(ex, "/usuarios?err=admin"); return; }
                         Auth.actualizar(con, id, username, rol, grupo);
                         if (!clave.isBlank()) Auth.resetPassword(con, id, clave);
-                        dbg.append("RESULTADO: USUARIO ACTUALIZADO OK\n");
                     }
-                    dbg.append("</pre><p><a class=\"btn\" href=\"/usuarios\">Ver lista de usuarios</a></p>");
+                    redirigir(ex, "/usuarios");
                 } catch (Exception e) {
-                    dbg.append("\nEXCEPCION: ").append(Html.esc(String.valueOf(e))).append("</pre>");
+                    enviarHtml(ex, 200, Html.page("Usuario", usuario, true, "/usuarios",
+                        "<h1>No se pudo guardar</h1>"
+                        + "<div class=\"err\">Motivo real: " + Html.esc(String.valueOf(e.getMessage())) + "</div>"
+                        + "<p><a class=\"btn\" href=\"/usuarios/form\">Volver</a></p>"));
+                    return;
                 }
-                enviarHtml(ex, 200, Html.page("Diagnostico", usuario, true, "/usuarios", dbg.toString()));
                 return;
             }
             
