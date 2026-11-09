@@ -243,6 +243,13 @@ public class Server {
 
     static String listaPersonas(List<Persona> lista, String filtro, String vista, boolean soloRegistro) {
         StringBuilder b = new StringBuilder();
+        if (soloRegistro) {
+            b.append("<h1>Registrar persona</h1>");
+            b.append("<div class=\"bar\"><a class=\"btn\" href=\"/personas/form\">Nueva persona</a></div>");
+            b.append("<p class=\"muted\">Usa <b>Nueva persona</b> para registrar. Tu grupo y tus ganados los ves en "
+                   + "<a href=\"/mi-resumen\">Mi resumen</a>.</p>");
+            return b.toString();
+        }
         b.append("<h1>Personas</h1>");
         b.append("<form class=\"bar\" method=\"get\" action=\"/personas\">")
          .append("<input type=\"search\" name=\"q\" placeholder=\"Buscar documento, nombre o correo\" value=\"")
@@ -393,7 +400,20 @@ public class Server {
         try (Connection con = Db.open()) {
             PersonaDao pdao = new PersonaDao(con);
             String grupo = Auth.grupoDeUsuario(con, usuario);
+
+            // Sin código de grupo asignado: resumen vacío, solo puede registrar
+            if (grupo == null || grupo.isBlank()) {
+                String cuerpo = saludoConectar(usuario, grupo)
+                    + "<h1>Mi resumen</h1>"
+                    + "<p class=\"muted\">Aún no tienes un <b>código de grupo</b> asignado, así que tu resumen está vacío. "
+                    + "Pídele a tu administrador que te asigne tu código. Por ahora solo puedes "
+                    + "<a href=\"/personas/form\">registrar personas</a>.</p>";
+                enviarHtml(ex, 200, Html.page("Mi resumen", usuario, false, true, grupo, "/mi-resumen", cuerpo));
+                return;
+            }
+
             List<Persona> lista = pdao.registradasPor(usuario);
+            List<Persona> grupoLista = pdao.findByGrupoNombre(grupo);
 
             java.time.LocalDate hoy = java.time.LocalDate.now();
             String mesActual = hoy.getYear() + "-" + String.format("%02d", hoy.getMonthValue());
@@ -416,6 +436,26 @@ public class Server {
 
             StringBuilder b = new StringBuilder();
             b.append(saludoConectar(usuario, grupo));
+
+            // Todo mi grupo (por código)
+            b.append("<h1>Mi grupo ").append(Html.esc(grupo)).append("</h1>");
+            b.append("<p class=\"muted\" style=\"margin-top:-6px\">Todas las personas registradas en tu grupo.</p>");
+            b.append("<div class=\"wrap\"><table><thead><tr>")
+             .append("<th>Tipo</th><th>Documento</th><th>Nombres completos</th><th>Celular</th><th>Correo</th>")
+             .append("<th>Reset</th><th>N° Cursos</th><th>Cursos estudiados</th><th>Líder</th>")
+             .append("</tr></thead><tbody>");
+            if (grupoLista.isEmpty()) {
+                b.append("<tr><td colspan=\"9\" class=\"muted\" style=\"text-align:center;padding:16px\">Aún no hay personas en tu grupo.</td></tr>");
+            } else {
+                for (Persona p : grupoLista) {
+                    b.append("<tr>").append(td(p.tipoLabel())).append(td(p.numDocumento)).append(td(p.nombresCompletos))
+                     .append(td(p.celular)).append(td(p.correo)).append(badgeReset(p.reset))
+                     .append(td(String.valueOf(p.numCursos))).append(td(p.cursosTexto)).append(td(p.grupoLider)).append("</tr>");
+                }
+            }
+            b.append("</tbody></table></div>");
+            b.append("<p class=\"count\">").append(grupoLista.size()).append(" personas en el grupo ").append(Html.esc(grupo)).append("</p>");
+
             b.append("<h1>Mi resumen</h1>");
             b.append("<p class=\"muted\" style=\"margin-top:-6px\">Personas que has ganado (registrado). "
                    + "Los contadores por semana y mes usan la fecha en que las registraste.</p>");
