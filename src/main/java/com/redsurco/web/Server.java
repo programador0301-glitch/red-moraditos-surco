@@ -1222,9 +1222,11 @@ public class Server {
                         if (!clave.isBlank()) Auth.resetPassword(con, id, clave);
                     }
                     redirigir(ex, "/usuarios");
-                } catch (RuntimeException e) {
-                    redirigir(ex, "/usuarios/form?err=2" + (idS.isBlank() ? "" : "&id=" + idS));
-                }
+               } catch (Exception e) {
+                    enviarHtml(ex, 200, Html.page("Usuario", usuario, true, "/usuarios",
+                        "<h1>No se pudo guardar</h1>"
+                        + "<div class=\"err\">Motivo real: " + Html.esc(String.valueOf(e.getMessage())) + "</div>"
+                        + "<p><a class=\"btn\" href=\"/usuarios/form\">Volver</a></p>"));
                 return;
             }
             if (path.equals("/usuarios/eliminar") && metodo.equals("POST")) {
