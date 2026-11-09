@@ -108,6 +108,24 @@ public class PersonaDao {
         return out;
     }
 
+    /** Todas las personas de un grupo identificado por su nombre/código (ej. "C187"). */
+    public List<Persona> findByGrupoNombre(String nombre) {
+        String sql =
+            "SELECT p.id, p.tipo_documento, p.num_documento, p.nombres_completos, p.celular, p.correo, "
+          + "p.grupo_id, p.reset, p.conectado, p.observaciones, p.creado, p.sexo, "
+          + "g.nombre grupo_nombre, g.lider grupo_lider, "
+          + "COUNT(pc.curso_id) ncur, " + com.redsurco.web.Db.groupConcat("c.nombre", ", ") + " cursos "
+          + "FROM persona p LEFT JOIN grupo g ON g.id=p.grupo_id "
+          + "LEFT JOIN persona_curso pc ON pc.persona_id=p.id LEFT JOIN curso c ON c.id=pc.curso_id "
+          + "WHERE p.eliminado=0 AND g.nombre=? GROUP BY p.id, g.nombre, g.lider ORDER BY p.nombres_completos";
+        List<Persona> out = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, nombre);
+            try (ResultSet rs = ps.executeQuery()) { while (rs.next()) out.add(leer(rs)); }
+        } catch (SQLException e) { throw new RuntimeException(e); }
+        return out;
+    }
+
     /** Lee una fila con todas las columnas del SELECT completo (reutilizable). */
     private Persona leer(ResultSet rs) throws SQLException {
         Persona p = new Persona();
